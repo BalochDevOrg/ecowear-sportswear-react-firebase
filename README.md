@@ -1,10 +1,11 @@
-# EcoWear Sportswear Store — React + Firebase E-commerce Template
+# EcoWear Sportswear — React 19 Vite 7 Firebase E-Commerce Storefront
 
-> **Production-ready eco sportswear storefront** built by the [Baloch Dev Team](https://www.balochdev.com). React 19, Vite 7, Firebase Auth & Firestore — clone, configure, and launch your sportswear brand online.
+> **Built by Baloch Dev Team**
 
 [![BalochDev](https://img.shields.io/badge/Built%20by-Baloch%20Dev%20Team-0ea5e9?style=flat-square)](https://www.balochdev.com)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white)](https://react.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore-FFCA28?style=flat-square&logo=firebase&logoColor=black)](https://firebase.google.com)
+[![Vite](https://img.shields.io/badge/Vite-7-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
 **Keywords:** React sportswear e-commerce template, Firebase clothing store, Vite React shop starter, eco fashion website, admin dashboard Firebase, open source e-commerce template
@@ -343,3 +344,60 @@ Treat these as disposable demo utilities — rerun only in clean sandboxes.
 | 5 | Exercise golden path cart → checkout → fulfilment tweak → shopper profile reconciliation |
 
 Happy reporting — regenerate diagrams referencing section **5** for authoritative field nomenclature.
+
+---
+
+## Use Cases
+
+- Launch a **client-only Firebase sportswear shop** without a custom backend
+- Teach **Firestore security rules**, role-based admin uplift, and order workflows
+- Demo **separated shopper vs admin UX** (`ClientLayout` vs `AdminLayout`)
+- Portfolio piece for **React 19 + Vite 7 + Firebase Hosting** deployments
+
+---
+
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph Browser["React SPA (Vite)"]
+        Shop["Shop / Cart / Checkout"]
+        Admin["Admin Cockpit /admin"]
+        Auth["Firebase Auth SDK"]
+    end
+    subgraph Firebase["Google Firebase"]
+        FS[(Cloud Firestore)]
+        FA[Authentication]
+        FH[Hosting optional]
+    end
+    Shop --> Auth
+    Admin --> Auth
+    Auth --> FA
+    Shop --> FS
+    Admin --> FS
+    FH --> Browser
+```
+
+---
+
+## Contributing
+
+Fork the repo, create a feature branch, and open a pull request. Follow conventional commits (`feat`, `fix`, `docs`, `chore`). Never commit `.env` or service account keys.
+
+---
+
+## About BalochDev
+
+| | |
+|---|---|
+| Website | [balochdev.com](https://www.balochdev.com) |
+| Email | [team@balochdev.com](mailto:team@balochdev.com) |
+| GitHub | [@BalochDevOrg](https://github.com/BalochDevOrg) |
+
+Baloch Dev builds production-ready web apps, e-commerce platforms, and Firebase backends. Need a custom storefront? Reach out at **team@balochdev.com**.
+
+---
+
+## License
+
+MIT © [BalochDev](https://www.balochdev.com) — see [LICENSE](LICENSE).
