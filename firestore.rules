@@ -1,0 +1,110 @@
+rules_version = '2';
+
+/*
+ * -----------------------------------------------------------------------------
+ * EcoWear Sports — Cloud Firestore Security Rules
+ * -----------------------------------------------------------------------------
+ *
+ * WHERE THIS WORKS:
+ *   • Editing THIS file (`firestore.rules`) is the project's source of truth.
+ *   • Apply to Firebase EITHER by:
+ *       A) Firebase Console → Firestore Database → Rules → paste → Publish
+ *       B) CLI from project folder: firebase deploy --only firestore:rules
+ *   Both compile the SAME rules engine. Prefer ONE workflow so Console and repo
+ *   stay in sync (commit after Console edits, or deploy from repo after edits).
+ *
+ * ADMIN DETECTION:
+ *   Docs at `users/{uid}` MUST have field `role: "admin"` for staff UI.
+ *   App sign-up only creates `role: "customer"`; promote admins in Console.
+ *
+ * ---------------------------------------------------------------------------
+ */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userSnapshot() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && userSnapshot().data.role == "admin";
+    }
+
+    // --- users: profiles + role gate for admin tooling --------------------
+    match /users/{uid} {
+      /** Owner or admin reads (admin needs fulfilment lookups). */
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+
+      /**
+       * Account creation — only authenticated user may create THEIR doc.
+       * `role` must be `customer` (no self-service admin escalation).
+       */
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.uid == uid
+        && request.resource.data.email is string
+        && request.resource.data.name is string
+        && request.resource.data.role == "customer";
+
+      /**
+       * Update: admins write any profile; customers may edit own doc but
+       * cannot change `role` (Privilege stays fixed unless admin adjusts).
+       */
+      allow update: if isAdmin()
+        || (
+          request.auth.uid == uid
+          && resource.data.role == request.resource.data.role
+        );
+
+      allow delete: if false;
+    }
+
+    // --- categories & products — public catalogue, admin catalogue writes ----
+    match /categories/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /products/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // --- orders: customer checkout snapshot; admin fulfilment ---------------
+    match /orders/{orderId} {
+
+      /** New order from storefront — customer auth + shape checks only. */
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == "pending"
+        && request.resource.data.customerName is string
+        && request.resource.data.email is string
+        && request.resource.data.items is list
+        && request.resource.data.subtotal is number
+        && request.resource.data.shipping is number
+        && request.resource.data.total is number
+        && request.resource.data.shippingAddress is map;
+
+      /** Buyer sees own; staff sees everything. */
+      allow read: if signedIn()
+        && (resource.data.userId == request.auth.uid || isAdmin());
+
+      /** Status / admin acknowledgement — staff only */
+      allow update: if isAdmin();
+
+      allow delete: if false;
+    }
+
+    // --- Deny anything not matched above -----------------------------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
